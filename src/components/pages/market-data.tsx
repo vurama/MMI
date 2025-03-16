@@ -92,7 +92,13 @@ const MarketData = () => {
     { name: "Financials", change: "+0.5%", trend: "up" },
     { name: "Consumer Discretionary", change: "+1.2%", trend: "up" },
     { name: "Communication Services", change: "+1.7%", trend: "up" },
-    { name: "Industrials
+    { name: "Industrials", change: "+0.3%", trend: "up" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex flex-col min-h-screen">
+        <main className="flex-1">
           <QuickAccessToolbar
             onOpenSearch={() => window.open("/dashboard", "_self")}
             onOpenChat={() => window.open("/advisor", "_self")}

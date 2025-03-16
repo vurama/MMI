@@ -32,7 +32,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
       <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden items-center justify-center mx-auto">
         <TopBar onOpenSettings={handleOpenSettings} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

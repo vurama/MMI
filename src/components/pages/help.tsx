@@ -4,10 +4,10 @@ import DashboardLayout from "@/components/dashboard/layout/DashboardLayout";
 
 const HelpPage: React.FC = () => {
   return (
-    <DashboardLayout>
-      <div className="w-full h-full overflow-y-auto bg-white dark:bg-gray-900">
+    <DashboardLayout activeItem="Help Center">
+      <main className="flex-1 overflow-auto p-4">
         <HelpCenter />
-      </div>
+      </main>
     </DashboardLayout>
   );
 };

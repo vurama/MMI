@@ -16,9 +16,6 @@ import {
   X,
   MessageSquare,
   Crown,
-  ChevronLeft,
-  ChevronRight,
-  Home,
   FileText,
   ClipboardCheck,
 } from "lucide-react";
@@ -105,11 +102,21 @@ const defaultBottomItems: NavItem[] = [
     icon: <FileText size={20} />,
     label: "Pro Advisor Admin",
     href: "/admin/advisor",
+    badge: {
+      text: "Admin",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "purple",
+    },
   },
   {
     icon: <ClipboardCheck size={20} />,
     label: "Chart Analysis Admin",
     href: "/chart-analysis-admin",
+    badge: {
+      text: "Admin",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "purple",
+    },
   },
 ];
 
@@ -127,12 +134,6 @@ const Sidebar = ({
       // Dispatch custom event to open settings dialog
       window.dispatchEvent(new CustomEvent("open-settings"));
       setIsMobileMenuOpen(false);
-      return;
-    } else if (item.label === "Help Center") {
-      if (item.href) {
-        navigate(item.href);
-        setIsMobileMenuOpen(false);
-      }
       return;
     } else if (item.href) {
       navigate(item.href);
@@ -173,7 +174,7 @@ const Sidebar = ({
           {items.map((item) => (
             <Button
               key={item.label}
-              variant={"ghost"}
+              variant="ghost"
               className={`w-full justify-start gap-3 h-10 rounded-xl text-sm font-medium ${item.label === activeItem ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-400 dark:hover:bg-indigo-950/70" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"}`}
               onClick={() => handleItemClick(item)}
             >
@@ -205,10 +206,12 @@ const Sidebar = ({
           <Button
             key={item.label}
             variant="ghost"
-            className="w-full justify-start gap-3 h-10 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 mb-1.5"
+            className={`w-full justify-start gap-3 h-10 rounded-xl text-sm font-medium ${item.label === activeItem ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-400 dark:hover:bg-indigo-950/70" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"} mb-1.5`}
             onClick={() => handleItemClick(item)}
           >
-            <span className="text-gray-500 dark:text-gray-400">
+            <span
+              className={`${item.label === activeItem ? "text-indigo-600 dark:text-indigo-400" : "text-gray-500 dark:text-gray-400"}`}
+            >
               {item.icon}
             </span>
             {item.label}
