@@ -92,7 +92,7 @@ const MarketData = () => {
     { name: "Financials", change: "+0.5%", trend: "up" },
     { name: "Consumer Discretionary", change: "+1.2%", trend: "up" },
     { name: "Communication Services", change: "+1.7%", trend: "up" },
-    { name: "Industrials", change: "+0.3%", trend: "up" },
+    { name: "Industrials", change: "+0.3%", trend: "up" }", change: "+0.3%", trend: "up" },
   ];
 
   return (
