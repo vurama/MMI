@@ -18,6 +18,7 @@ import {
   Crown,
   FileText,
   ClipboardCheck,
+  TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -76,6 +77,16 @@ const defaultNavItems: NavItem[] = [
       text: "New",
       icon: <Sparkles className="h-3 w-3 mr-1" />,
       color: "indigo",
+    },
+  },
+  {
+    icon: <TrendingUp size={20} />,
+    label: "Social Trading",
+    href: "/social-trading",
+    badge: {
+      text: "New",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "purple",
     },
   },
 ];

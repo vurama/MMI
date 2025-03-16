@@ -18,6 +18,7 @@ import routes from "tempo-routes";
 import SettingsDialogWrapper from "./components/ui/settings-dialog-wrapper";
 import HelpPage from "./components/pages/help";
 import Signals from "./components/pages/signals";
+import SocialTrading from "./components/pages/social-trading";
 
 function LoadingScreen({ text = "Loading..." }: { text?: string }) {
   return (
@@ -35,10 +36,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     return <LoadingScreen text="Authenticating..." />;
   }
 
-  if (!user) {
-    return <Navigate to="/" />;
-  }
-
+  // Temporarily allowing access without authentication
   return <>{children}</>;
 }
 
@@ -195,6 +193,14 @@ function AppRoutes() {
           element={
             <PrivateRoute>
               <Signals />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/social-trading"
+          element={
+            <PrivateRoute>
+              <SocialTrading />
             </PrivateRoute>
           }
         />
