@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -27,6 +28,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Clock,
+  CreditCard,
+  Coins,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,6 +38,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserCreditsService } from "@/services/UserCreditsService";
+import { PurchaseCreditsModal } from "./PurchaseCreditsModal";
+import { AddCreditsButton } from "./AddCreditsButton";
 
 interface Signal {
   id: string;
@@ -109,16 +115,22 @@ export default function SignalsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("Crypto");
   const [selectedTicker, setSelectedTicker] = useState<string>("");
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>("1D");
-  const [selectedSignalType, setSelectedSignalType] = useState<string>("");
+  const [selectedSignalType, setSelectedSignalType] =
+    useState<string>("any_signal_type");
   const [isRequesting, setIsRequesting] = useState(false);
   const [signals, setSignals] = useState<Signal[]>([]);
   const [activeTab, setActiveTab] = useState("signals");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterTimeframe, setFilterTimeframe] = useState<string>("");
-  const [filterCategory, setFilterCategory] = useState<string>("");
-  const [filterSignalType, setFilterSignalType] = useState<string>("");
-  const [filterDirection, setFilterDirection] = useState<string>("");
+  const [filterTimeframe, setFilterTimeframe] =
+    useState<string>("all_timeframes");
+  const [filterCategory, setFilterCategory] =
+    useState<string>("all_categories");
+  const [filterSignalType, setFilterSignalType] = useState<string>("all_types");
+  const [filterDirection, setFilterDirection] =
+    useState<string>("all_directions");
   const [showFilters, setShowFilters] = useState(false);
+  const [userCredits, setUserCredits] = useState<number>(0);
+  const [isLoadingCredits, setIsLoadingCredits] = useState<boolean>(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -128,6 +140,11 @@ export default function SignalsPage() {
     // Load signals from database
     fetchSignals();
   }, [selectedCategory]);
+
+  useEffect(() => {
+    // Load user credits
+    fetchUserCredits();
+  }, []);
 
   const fetchSignals = async () => {
     try {
@@ -149,6 +166,26 @@ export default function SignalsPage() {
       console.error("Error fetching signals:", error);
       // For demo purposes, set some mock data
       setSignals(getMockSignals());
+    }
+  };
+
+  const fetchUserCredits = async () => {
+    setIsLoadingCredits(true);
+    try {
+      const { signalCredits } = await UserCreditsService.getUserCredits();
+      console.log("Fetched user credits:", signalCredits);
+      setUserCredits(signalCredits);
+    } catch (error) {
+      console.error("Error fetching user credits:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load credit balance. Please try again.",
+        variant: "destructive",
+      });
+      // Set a default value in case of error
+      setUserCredits(100); // Set a reasonable default for testing
+    } finally {
+      setIsLoadingCredits(false);
     }
   };
 
@@ -263,13 +300,31 @@ export default function SignalsPage() {
       return;
     }
 
+    // Check if user has enough credits
+    const creditsNeeded = e ? 1 : 5; // 1 for regular request, 5 for quick request
+    if (userCredits < creditsNeeded) {
+      toast({
+        title: "Insufficient credits",
+        description: `You don't have enough credits to request a signal. You need ${creditsNeeded} credits. Please purchase more credits.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsRequesting(true);
 
     try {
+      // Deduct credits for the signal request
+      const creditsToDeduct = e ? 1 : 5; // 1 for regular request, 5 for quick request
+      await UserCreditsService.deductSignalCredits(creditsToDeduct);
+
+      // Update local credit count
+      setUserCredits((prevCredits) => prevCredits - creditsToDeduct);
+
       // Show toast notification for request immediately
       toast({
         title: "Signal requested",
-        description: `Your signal for ${selectedTicker} (${selectedTimeframe}) has been requested.`,
+        description: `Your signal for ${selectedTicker} (${selectedTimeframe}) has been requested. ${e ? "1 credit used. Estimated wait time: 1 minute." : "5 credits used. Estimated wait time: 15 seconds."}`,
       });
 
       // In a real implementation, this would create a record in Supabase
@@ -277,7 +332,10 @@ export default function SignalsPage() {
         ticker: selectedTicker,
         timeframe: selectedTimeframe,
         category: selectedCategory,
-        signalType: selectedSignalType || undefined,
+        signalType:
+          selectedSignalType === "any_signal_type"
+            ? undefined
+            : selectedSignalType,
         status: "pending",
       };
 
@@ -292,7 +350,13 @@ export default function SignalsPage() {
         // Continue with mock flow even if insert fails
       }
 
-      // Simulate receiving a signal after a short delay
+      // Simulate receiving a signal after a delay (1 min for regular, 15 seconds for quick)
+      const waitTime = e ? 60000 : 15000; // 1 minute for regular, 15 seconds for quick
+      toast({
+        title: "Processing signal",
+        description: `Your signal will be ready in ${e ? "1 minute" : "15 seconds"}. Please wait...`,
+      });
+
       setTimeout(() => {
         const mockSignal: Signal = {
           id: Math.random().toString(36).substring(7),
@@ -307,10 +371,11 @@ export default function SignalsPage() {
           status: "completed",
           category: selectedCategory,
           signalType:
-            (selectedSignalType as any) ||
-            (signalTypes[
-              Math.floor(Math.random() * signalTypes.length)
-            ] as any),
+            selectedSignalType !== "any_signal_type"
+              ? (selectedSignalType as any)
+              : (signalTypes[
+                  Math.floor(Math.random() * signalTypes.length)
+                ] as any),
           indicator: "Pro Indicator",
           notes: `Signal based on technical analysis for ${selectedTicker}`,
           confidence: 70 + Math.floor(Math.random() * 20),
@@ -325,15 +390,29 @@ export default function SignalsPage() {
 
         setActiveTab("signals");
         setIsRequesting(false);
-      }, 3000);
+      }, waitTime);
     } catch (error) {
       console.error("Error requesting signal:", error);
-      toast({
-        title: "Error",
-        description:
-          "There was an error requesting your signal. Please try again.",
-        variant: "destructive",
-      });
+
+      // Check if it's a credit-related error
+      if (error instanceof Error && error.message === "Not enough credits") {
+        toast({
+          title: "Insufficient credits",
+          description:
+            "You don't have enough credits to request a signal. Please purchase more credits.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description:
+            "There was an error requesting your signal. Please try again.",
+          variant: "destructive",
+        });
+      }
+
+      // Refresh credits to ensure accurate count
+      fetchUserCredits();
       setIsRequesting(false);
     }
   };
@@ -359,22 +438,34 @@ export default function SignalsPage() {
       }
 
       // Timeframe filter
-      if (filterTimeframe && signal.timeframe !== filterTimeframe) {
+      if (
+        filterTimeframe !== "all_timeframes" &&
+        signal.timeframe !== filterTimeframe
+      ) {
         return false;
       }
 
       // Category filter
-      if (filterCategory && signal.category !== filterCategory) {
+      if (
+        filterCategory !== "all_categories" &&
+        signal.category !== filterCategory
+      ) {
         return false;
       }
 
       // Signal type filter
-      if (filterSignalType && signal.signalType !== filterSignalType) {
+      if (
+        filterSignalType !== "all_types" &&
+        signal.signalType !== filterSignalType
+      ) {
         return false;
       }
 
       // Direction filter
-      if (filterDirection && signal.direction !== filterDirection) {
+      if (
+        filterDirection !== "all_directions" &&
+        signal.direction !== filterDirection
+      ) {
         return false;
       }
 
@@ -391,10 +482,10 @@ export default function SignalsPage() {
 
   const resetFilters = () => {
     setSearchQuery("");
-    setFilterTimeframe("");
-    setFilterCategory("");
-    setFilterSignalType("");
-    setFilterDirection("");
+    setFilterTimeframe("all_timeframes");
+    setFilterCategory("all_categories");
+    setFilterSignalType("all_types");
+    setFilterDirection("all_directions");
   };
 
   return (
@@ -402,6 +493,44 @@ export default function SignalsPage() {
       <div className="flex flex-col space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">Market Signals</h1>
+          <div className="flex items-center bg-muted/50 px-3 py-1.5 rounded-md">
+            <Coins className="h-4 w-4 mr-1.5 text-yellow-500" />
+            <span className="text-sm font-medium">
+              {isLoadingCredits ? (
+                <span className="flex items-center">
+                  <LoadingSpinner className="h-3 w-3 mr-1" /> Loading...
+                </span>
+              ) : (
+                <span>
+                  Credits:{" "}
+                  <span className="text-yellow-500 font-bold">
+                    {userCredits}
+                  </span>
+                </span>
+              )}
+            </span>
+            <div className="flex items-center gap-1">
+              <AddCreditsButton
+                onCreditsAdded={() => {
+                  console.log("Credits added, refreshing...");
+                  fetchUserCredits();
+                }}
+                amount={10}
+              />
+              <PurchaseCreditsModal
+                onCreditsUpdated={() => {
+                  console.log("Credits purchased, refreshing...");
+                  fetchUserCredits();
+                }}
+                trigger={
+                  <Button variant="ghost" size="sm" className="ml-1 h-7 px-2">
+                    <CreditCard className="h-3.5 w-3.5 mr-1" />
+                    <span className="text-xs">Buy</span>
+                  </Button>
+                }
+              />
+            </div>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -464,7 +593,9 @@ export default function SignalsPage() {
                             <SelectValue placeholder="All Timeframes" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Timeframes</SelectItem>
+                            <SelectItem value="all_timeframes">
+                              All Timeframes
+                            </SelectItem>
                             {timeframes.map((timeframe) => (
                               <SelectItem key={timeframe} value={timeframe}>
                                 {timeframe}
@@ -486,7 +617,9 @@ export default function SignalsPage() {
                             <SelectValue placeholder="All Categories" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Categories</SelectItem>
+                            <SelectItem value="all_categories">
+                              All Categories
+                            </SelectItem>
                             {categories.map((category) => (
                               <SelectItem key={category} value={category}>
                                 {category}
@@ -508,7 +641,7 @@ export default function SignalsPage() {
                             <SelectValue placeholder="All Types" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Types</SelectItem>
+                            <SelectItem value="all_types">All Types</SelectItem>
                             {signalTypes.map((type) => (
                               <SelectItem key={type} value={type}>
                                 {type}
@@ -530,7 +663,9 @@ export default function SignalsPage() {
                             <SelectValue placeholder="All Directions" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Directions</SelectItem>
+                            <SelectItem value="all_directions">
+                              All Directions
+                            </SelectItem>
                             <SelectItem value="Long">Long</SelectItem>
                             <SelectItem value="Short">Short</SelectItem>
                           </SelectContent>
@@ -741,9 +876,32 @@ export default function SignalsPage() {
                 <CardDescription>
                   Select your asset and timeframe to receive a trading signal
                 </CardDescription>
+                <div className="flex items-center mt-2 text-sm">
+                  <Coins className="h-4 w-4 mr-1 text-yellow-500" />
+                  <span className="font-medium">
+                    {isLoadingCredits ? (
+                      <span className="flex items-center">
+                        <LoadingSpinner className="h-3 w-3 mr-1" /> Loading
+                        credits...
+                      </span>
+                    ) : (
+                      <span>
+                        Available Credits:{" "}
+                        <span className="text-yellow-500 font-bold">
+                          {userCredits}
+                        </span>
+                      </span>
+                    )}
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <form onSubmit={(e) => requestSignal(e)}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    requestSignal(e);
+                  }}
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
@@ -818,7 +976,9 @@ export default function SignalsPage() {
                           <SelectValue placeholder="Any signal type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Any signal type</SelectItem>
+                          <SelectItem value="any_signal_type">
+                            Any signal type
+                          </SelectItem>
                           {signalTypes.map((type) => (
                             <SelectItem key={type} value={type}>
                               {type}
@@ -846,7 +1006,10 @@ export default function SignalsPage() {
                     <Button
                       type="submit"
                       disabled={
-                        isRequesting || !selectedTicker || !selectedTimeframe
+                        isRequesting ||
+                        !selectedTicker ||
+                        !selectedTimeframe ||
+                        userCredits < 1
                       }
                       className="w-full md:w-auto"
                       variant="default"
@@ -857,13 +1020,21 @@ export default function SignalsPage() {
                           Requesting...
                         </>
                       ) : (
-                        "Request Signal"
+                        <>
+                          Request Signal{" "}
+                          <span className="ml-1 text-xs">
+                            (1 credit - 1 min wait)
+                          </span>
+                        </>
                       )}
                     </Button>
                     <Button
                       onClick={() => requestSignal(null)}
                       disabled={
-                        isRequesting || !selectedTicker || !selectedTimeframe
+                        isRequesting ||
+                        !selectedTicker ||
+                        !selectedTimeframe ||
+                        userCredits < 5
                       }
                       className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white"
                     >
@@ -873,12 +1044,44 @@ export default function SignalsPage() {
                           Processing...
                         </>
                       ) : (
-                        "Quick Request"
+                        "Quick Request (5 credits - 15 sec)"
                       )}
                     </Button>
                   </div>
                 </form>
               </CardContent>
+              <CardFooter className="flex flex-col items-start bg-muted/30 border-t">
+                <div className="flex items-center mb-2">
+                  <CreditCard className="h-4 w-4 mr-2 text-primary" />
+                  <span className="font-medium">Need more credits?</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Each signal request costs 1 credit. Purchase more credits to
+                  continue receiving trading signals.
+                </p>
+                <div className="flex items-center gap-2">
+                  <AddCreditsButton
+                    onCreditsAdded={() => {
+                      console.log("Credits added from footer, refreshing...");
+                      fetchUserCredits();
+                    }}
+                    amount={20}
+                  />
+                  <PurchaseCreditsModal
+                    onCreditsUpdated={() => {
+                      console.log(
+                        "Credits purchased from footer, refreshing...",
+                      );
+                      fetchUserCredits();
+                    }}
+                    trigger={
+                      <Button variant="outline" className="bg-primary/10">
+                        Purchase Credits
+                      </Button>
+                    }
+                  />
+                </div>
+              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
