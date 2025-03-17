@@ -5,10 +5,16 @@ import SettingsDialog from "@/components/ui/settings-dialog";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  activeItem?: string;
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const [activeItem, setActiveItem] = useState("Intelligence Center");
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({
+  children,
+  activeItem: propActiveItem,
+}) => {
+  const [activeItem, setActiveItem] = useState(
+    propActiveItem || "Intelligence Center",
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [activeAgents, setActiveAgents] = useState({
@@ -32,9 +38,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
       <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
-      <div className="flex-1 flex flex-col overflow-hidden items-center justify-center mx-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar onOpenSettings={handleOpenSettings} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto w-full h-[calc(100vh-64px)]">
+          {children}
+        </main>
       </div>
 
       <SettingsDialog

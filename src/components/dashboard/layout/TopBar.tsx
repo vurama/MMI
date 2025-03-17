@@ -26,7 +26,21 @@ const TopBar: React.FC<TopBarProps> = ({ onOpenSettings }) => {
     }
   };
 
-  return null;
+  return (
+    <div className="w-full h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between px-4">
+      <div></div>
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleOpenSettings}
+          className="h-8 w-8 p-0"
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 };
 
 export default TopBar;

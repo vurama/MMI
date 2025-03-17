@@ -19,6 +19,7 @@ import SettingsDialogWrapper from "./components/ui/settings-dialog-wrapper";
 import HelpPage from "./components/pages/help";
 import Signals from "./components/pages/signals";
 import SocialTrading from "./components/pages/social-trading";
+import RedFlagAI from "./components/pages/red-flag-ai";
 
 function LoadingScreen({ text = "Loading..." }: { text?: string }) {
   return (
@@ -201,6 +202,62 @@ function AppRoutes() {
           element={
             <PrivateRoute>
               <SocialTrading />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/crypto-map"
+          element={
+            <PrivateRoute>
+              <Suspense
+                fallback={<LoadingScreen text="Loading crypto map..." />}
+              >
+                {React.createElement(
+                  React.lazy(
+                    () => import("./components/pages/crypto-world-map"),
+                  ),
+                )}
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/red-flag-ai"
+          element={
+            <PrivateRoute>
+              <RedFlagAI />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/tax-tracker"
+          element={
+            <PrivateRoute>
+              <Suspense
+                fallback={<LoadingScreen text="Loading tax tracker..." />}
+              >
+                {React.createElement(
+                  React.lazy(() => import("./components/pages/tax-tracker")),
+                )}
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/market-correlation"
+          element={
+            <PrivateRoute>
+              <Suspense
+                fallback={
+                  <LoadingScreen text="Loading market correlation..." />
+                }
+              >
+                {React.createElement(
+                  React.lazy(
+                    () => import("./components/pages/market-correlation"),
+                  ),
+                )}
+              </Suspense>
             </PrivateRoute>
           }
         />

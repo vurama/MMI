@@ -19,6 +19,9 @@ import {
   FileText,
   ClipboardCheck,
   TrendingUp,
+  Globe,
+  AlertCircle,
+  DollarSign,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -87,6 +90,46 @@ const defaultNavItems: NavItem[] = [
       text: "New",
       icon: <Sparkles className="h-3 w-3 mr-1" />,
       color: "purple",
+    },
+  },
+  {
+    icon: <Brain size={20} />,
+    label: "Market Correlation AI",
+    href: "/market-correlation",
+    badge: {
+      text: "New",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "blue",
+    },
+  },
+  {
+    icon: <Globe size={20} />,
+    label: "Crypto World Map",
+    href: "/crypto-map",
+    badge: {
+      text: "New",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "indigo",
+    },
+  },
+  {
+    icon: <AlertCircle size={20} />,
+    label: "Red Flag AI",
+    href: "/red-flag-ai",
+    badge: {
+      text: "New",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "red",
+    },
+  },
+  {
+    icon: <DollarSign size={20} />,
+    label: "Tax Tracker",
+    href: "/tax-tracker",
+    badge: {
+      text: "New",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "green",
     },
   },
 ];
@@ -198,7 +241,7 @@ const Sidebar = ({
                 {item.label}
                 {item.badge && (
                   <span
-                    className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full flex items-center ${item.badge.color === "indigo" ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" : item.badge.color === "cyan" ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300" : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"}`}
+                    className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full flex items-center ${item.badge.color === "indigo" ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" : item.badge.color === "cyan" ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300" : item.badge.color === "red" ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" : item.badge.color === "green" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"}`}
                   >
                     {item.badge.icon}
                     {item.badge.text}
@@ -228,7 +271,7 @@ const Sidebar = ({
             {item.label}
             {item.badge && (
               <span
-                className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full flex items-center ${item.badge.color === "indigo" ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" : item.badge.color === "cyan" ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300" : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"}`}
+                className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full flex items-center ${item.badge.color === "indigo" ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" : item.badge.color === "cyan" ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300" : item.badge.color === "green" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"}`}
               >
                 {item.badge.icon}
                 {item.badge.text}
