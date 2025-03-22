@@ -51,6 +51,24 @@ export type Database = {
         }
         Relationships: []
       }
+      market_intelligence: {
+        Row: {
+          created_at: string
+          data: Json
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: number
+        }
+        Relationships: []
+      }
       market_sentiment: {
         Row: {
           ai_analysis: string | null

@@ -93,6 +93,16 @@ const defaultNavItems: NavItem[] = [
     },
   },
   {
+    icon: <AlertCircle size={20} />,
+    label: "Broker Radar",
+    href: "/broker-radar",
+    badge: {
+      text: "New",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "orange",
+    },
+  },
+  {
     icon: <Brain size={20} />,
     label: "Market Correlation AI",
     href: "/market-correlation",
@@ -100,6 +110,17 @@ const defaultNavItems: NavItem[] = [
       text: "New",
       icon: <Sparkles className="h-3 w-3 mr-1" />,
       color: "blue",
+    },
+  },
+
+  {
+    icon: <Brain size={20} />,
+    label: "Risk Assessment AI",
+    href: "/risk-assessment",
+    badge: {
+      text: "New",
+      icon: <Sparkles className="h-3 w-3 mr-1" />,
+      color: "green",
     },
   },
   {
@@ -205,7 +226,7 @@ const Sidebar = ({
     <Button
       variant="ghost"
       size="icon"
-      className="md:hidden fixed top-4 left-4 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm border border-gray-200 dark:border-gray-700 rounded-full"
+      className="fixed top-4 left-4 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm border border-gray-200 dark:border-gray-700 rounded-full"
       onClick={toggleMobileMenu}
     >
       {isMobileMenuOpen ? (
@@ -287,8 +308,8 @@ const Sidebar = ({
     <>
       {mobileMenuButton}
 
-      {/* Desktop sidebar - always visible on md+ screens */}
-      <div className="hidden md:flex h-full w-[280px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-gray-200 dark:border-gray-800 flex-col shadow-md relative overflow-hidden">
+      {/* Desktop sidebar - always visible */}
+      <div className="flex h-full w-[280px] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-gray-200 dark:border-gray-800 flex-col shadow-md relative overflow-hidden">
         {sidebarContent}
       </div>
 

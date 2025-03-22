@@ -1,25 +1,27 @@
 import React, { Suspense } from "react";
-import { Routes, Route, Navigate, useRoutes } from "react-router-dom";
+import { Routes, Route, useRoutes } from "react-router-dom";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import SettingsDialogWrapper from "@/components/ui/settings-dialog-wrapper";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAuth, AuthProvider } from "../supabase/auth";
+import routes from "tempo-routes";
+
 import Home from "./components/pages/home";
 import LoginForm from "./components/auth/LoginForm";
 import SignUpForm from "./components/auth/SignUpForm";
 import Dashboard from "./components/pages/dashboard";
 import Agents from "./components/pages/agents";
-import Success from "./components/pages/success";
 import SubscriptionPage from "./components/pages/subscription";
 import CheckoutPage from "./components/pages/checkout";
+import HelpPage from "./components/pages/help";
 import ChartAnalyzerPage from "./components/chart-analyzer/ChartAnalyzerPage";
 import ChartAnalysisAdminPage from "./components/pages/chart-analysis-admin";
-import { Toaster } from "./components/ui/toaster";
-import { LoadingSpinner } from "./components/ui/loading-spinner";
-import { ThemeProvider } from "./components/ui/theme-provider";
-import routes from "tempo-routes";
-import SettingsDialogWrapper from "./components/ui/settings-dialog-wrapper";
-import HelpPage from "./components/pages/help";
+import Success from "./components/pages/success";
 import Signals from "./components/pages/signals";
 import SocialTrading from "./components/pages/social-trading";
 import RedFlagAI from "./components/pages/red-flag-ai";
+import BrokerRadarPage from "./components/pages/broker-radar";
 
 function LoadingScreen({ text = "Loading..." }: { text?: string }) {
   return (
@@ -206,6 +208,30 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/broker-radar"
+          element={
+            <PrivateRoute>
+              <BrokerRadarPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/risk-assessment"
+          element={
+            <PrivateRoute>
+              <Suspense
+                fallback={<LoadingScreen text="Loading risk assessment..." />}
+              >
+                {React.createElement(
+                  React.lazy(
+                    () => import("./components/pages/risk-assessment-ai"),
+                  ),
+                )}
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/crypto-map"
           element={
             <PrivateRoute>
@@ -261,6 +287,7 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
+
         <Route path="/success" element={<Success />} />
         {/* Add a catch-all route for Tempo storybooks */}
         {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}
