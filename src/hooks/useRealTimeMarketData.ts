@@ -1,339 +1,148 @@
 import { useState, useEffect } from "react";
 
-export interface MarketData {
-  symbol: string;
-  price: string;
-  change: string;
-  changePercent: string;
-  lastUpdated: Date;
+export interface MarketDataItem {
+  ticker: string;
+  price: number;
+  change: number;
+  volume: number;
+  avgVolume: number;
+  lastUpdated: string;
 }
 
-export interface RealTimeMarketDataResult {
-  data: MarketData[];
-  isLoading: boolean;
-  error: string | null;
-  lastUpdated: Date;
-}
+// This hook provides functions to fetch real-time market data
+export function useRealTimeMarketData(category?: string) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<Record<string, MarketDataItem> | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>(
+    new Date().toISOString(),
+  );
 
-// This hook fetches real-time market data for the selected category
-export function useRealTimeMarketData(category: string = "stocks") {
-  const [result, setResult] = useState<RealTimeMarketDataResult>({
-    data: [],
-    isLoading: true,
-    error: null,
-    lastUpdated: new Date(),
-  });
-
+  // Generate mock data based on category
   useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    const fetchMarketData = async () => {
-      if (!isMounted) return;
-
-      setResult((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        // Select symbols based on category
-        const symbols = getSymbolsForCategory(category);
-        const symbolsString = symbols.join(",");
-
-        // Using Alpha Vantage API (free tier - limited to 5 API calls per minute and 500 per day)
-        // You would need to replace 'demo' with an actual API key for production use
-        const apiKey = "demo"; // For demo purposes
-
-        // For stocks and indices
-        if (category === "stocks" || category === "indices") {
-          const response = await fetch(
-            `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbolsString.split(",")[0]}&apikey=${apiKey}`,
-            { signal },
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch market data");
-          }
-
-          const data = await response.json();
-
-          // Process the data
-          const processedData = processAlphaVantageData(data, category);
-
-          if (!isMounted) return;
-
-          setResult({
-            data: processedData,
-            isLoading: false,
-            error: null,
-            lastUpdated: new Date(),
-          });
+    if (category) {
+      const mockTickers = getMockTickersForCategory(category);
+      getBatchMarketData(mockTickers).then((result) => {
+        if (result) {
+          setData(result);
+          setLastUpdated(new Date().toISOString());
         }
-        // For crypto
-        else if (category === "crypto") {
-          const response = await fetch(
-            `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=BTC&to_currency=USD&apikey=${apiKey}`,
-            { signal },
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch crypto data");
-          }
-
-          const data = await response.json();
-
-          // Process the data
-          const processedData = processCryptoData(data);
-
-          if (!isMounted) return;
-
-          setResult({
-            data: processedData,
-            isLoading: false,
-            error: null,
-            lastUpdated: new Date(),
-          });
-        }
-        // For forex
-        else if (category === "forex") {
-          const response = await fetch(
-            `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey=${apiKey}`,
-            { signal },
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch forex data");
-          }
-
-          const data = await response.json();
-
-          // Process the data
-          const processedData = processForexData(data);
-
-          if (!isMounted) return;
-
-          setResult({
-            data: processedData,
-            isLoading: false,
-            error: null,
-            lastUpdated: new Date(),
-          });
-        }
-        // For real estate, we'll use mock data as there's no free real-time API
-        else {
-          // Simulate API call delay
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
-          // Generate mock data
-          const mockData = generateMockData(category);
-
-          if (!isMounted) return;
-
-          setResult({
-            data: mockData,
-            isLoading: false,
-            error: null,
-            lastUpdated: new Date(),
-          });
-        }
-      } catch (error) {
-        if (!isMounted) return;
-
-        console.error("Error fetching market data:", error);
-
-        // Fall back to mock data on error
-        const mockData = generateMockData(category);
-
-        setResult({
-          data: mockData,
-          isLoading: false,
-          error: "Using demo data. For production, please use a valid API key.",
-          lastUpdated: new Date(),
-        });
-      }
-    };
-
-    fetchMarketData();
-
-    // Refresh data every 60 seconds
-    const intervalId = setInterval(fetchMarketData, 60000);
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-      clearInterval(intervalId);
-    };
+      });
+    }
   }, [category]);
 
-  return result;
-}
-
-// Helper function to get symbols for each category
-function getSymbolsForCategory(category: string): string[] {
-  switch (category.toLowerCase()) {
-    case "stocks":
-      return ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"];
-    case "crypto":
-      return ["BTC", "ETH", "SOL", "ADA", "XRP"];
-    case "indices":
-      return ["SPY", "QQQ", "DIA", "IWM", "VIX"];
-    case "forex":
-      return ["EUR/USD", "USD/JPY", "GBP/USD", "USD/CHF", "AUD/USD"];
-    case "realestate":
-      return ["VNQ", "IYR", "XLRE", "AMT", "PLD"];
-    default:
-      return ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"];
-  }
-}
-
-// Process Alpha Vantage stock/index data
-function processAlphaVantageData(data: any, category: string): MarketData[] {
-  // For demo purposes, we'll generate mock data if the API returns limited data
-  if (
-    !data ||
-    !data["Global Quote"] ||
-    Object.keys(data["Global Quote"]).length === 0
-  ) {
-    return generateMockData(category);
-  }
-
-  const quote = data["Global Quote"];
-  const symbol = quote["01. symbol"];
-  const price = quote["05. price"];
-  const change = quote["09. change"];
-  const changePercent = quote["10. change percent"];
-
-  return [
-    {
-      symbol,
-      price: `$${parseFloat(price).toFixed(2)}`,
-      change: `${parseFloat(change) >= 0 ? "+" : ""}${parseFloat(change).toFixed(2)}`,
-      changePercent: changePercent,
-      lastUpdated: new Date(),
-    },
-  ];
-}
-
-// Process crypto data
-function processCryptoData(data: any): MarketData[] {
-  // For demo purposes, we'll generate mock data if the API returns limited data
-  if (!data || !data["Realtime Currency Exchange Rate"]) {
-    return generateMockData("crypto");
-  }
-
-  const exchangeRate = data["Realtime Currency Exchange Rate"];
-  const fromCurrency = exchangeRate["1. From_Currency Code"];
-  const price = exchangeRate["5. Exchange Rate"];
-
-  // We don't get change data from this endpoint, so we'll simulate it
-  const change = (Math.random() * 2 - 1) * 1000; // Random change between -1000 and 1000
-  const changePercent = `${((change / parseFloat(price)) * 100).toFixed(2)}%`;
-
-  return [
-    {
-      symbol: fromCurrency,
-      price: `$${parseFloat(price).toFixed(2)}`,
-      change: `${change >= 0 ? "+" : ""}${change.toFixed(2)}`,
-      changePercent: `${change >= 0 ? "+" : ""}${changePercent}`,
-      lastUpdated: new Date(),
-    },
-  ];
-}
-
-// Process forex data
-function processForexData(data: any): MarketData[] {
-  // For demo purposes, we'll generate mock data if the API returns limited data
-  if (!data || !data["Realtime Currency Exchange Rate"]) {
-    return generateMockData("forex");
-  }
-
-  const exchangeRate = data["Realtime Currency Exchange Rate"];
-  const fromCurrency = exchangeRate["1. From_Currency Code"];
-  const toCurrency = exchangeRate["3. To_Currency Code"];
-  const price = exchangeRate["5. Exchange Rate"];
-
-  // We don't get change data from this endpoint, so we'll simulate it
-  const change = Math.random() * 0.02 - 0.01; // Random change between -0.01 and 0.01
-  const changePercent = `${((change / parseFloat(price)) * 100).toFixed(2)}%`;
-
-  return [
-    {
-      symbol: `${fromCurrency}/${toCurrency}`,
-      price: parseFloat(price).toFixed(4),
-      change: `${change >= 0 ? "+" : ""}${change.toFixed(4)}`,
-      changePercent: `${change >= 0 ? "+" : ""}${changePercent}`,
-      lastUpdated: new Date(),
-    },
-  ];
-}
-
-// Generate mock market data
-function generateMockData(category: string): MarketData[] {
-  const symbols = getSymbolsForCategory(category);
-
-  return symbols.map((symbol) => {
-    // Generate random price and change based on category
-    let basePrice = 0;
-    let changeRange = 0;
-
+  // Get mock tickers based on category
+  const getMockTickersForCategory = (category: string): string[] => {
     switch (category.toLowerCase()) {
       case "stocks":
-        basePrice = Math.random() * 500 + 50; // $50-$550
-        changeRange = basePrice * 0.05; // 5% of price
-        break;
+        return ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"];
       case "crypto":
-        if (symbol === "BTC") {
-          basePrice = Math.random() * 5000 + 60000; // $60,000-$65,000
-        } else if (symbol === "ETH") {
-          basePrice = Math.random() * 500 + 3000; // $3,000-$3,500
-        } else {
-          basePrice = Math.random() * 100 + 10; // $10-$110
-        }
-        changeRange = basePrice * 0.08; // 8% of price (crypto is more volatile)
-        break;
-      case "indices":
-        if (symbol === "SPY") {
-          basePrice = Math.random() * 50 + 450; // $450-$500
-        } else if (symbol === "QQQ") {
-          basePrice = Math.random() * 50 + 380; // $380-$430
-        } else {
-          basePrice = Math.random() * 1000 + 1000; // $1,000-$2,000
-        }
-        changeRange = basePrice * 0.02; // 2% of price
-        break;
+        return ["BTC", "ETH", "SOL", "ADA", "DOT"];
       case "forex":
-        basePrice = Math.random() * 0.1 + 1; // 1.0-1.1 for major pairs
-        changeRange = basePrice * 0.01; // 1% of price
-        break;
-      case "realestate":
-        basePrice = Math.random() * 50 + 80; // $80-$130 for REITs
-        changeRange = basePrice * 0.03; // 3% of price
-        break;
+        return ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD"];
+      case "commodities":
+        return ["GOLD", "SILVER", "OIL", "GAS", "COPPER"];
       default:
-        basePrice = Math.random() * 100 + 50; // $50-$150
-        changeRange = basePrice * 0.04; // 4% of price
+        return ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"];
     }
+  };
 
-    const change = (Math.random() * 2 - 1) * changeRange; // Random change between -changeRange and +changeRange
-    const changePercent = (change / basePrice) * 100;
+  // Function to get real-time data for a specific ticker
+  const getRealTimeData = async (ticker: string) => {
+    setIsLoading(true);
+    setError(null);
 
-    // Format based on category
-    let formattedPrice = "";
-    let formattedChange = "";
+    try {
+      // In a real implementation, this would fetch from an API
+      // For now, we'll simulate a response with slightly randomized data
 
-    if (category === "forex") {
-      formattedPrice = basePrice.toFixed(4);
-      formattedChange = change.toFixed(4);
-    } else {
-      formattedPrice = `$${basePrice.toFixed(2)}`;
-      formattedChange = `${change >= 0 ? "+" : ""}${change.toFixed(2)}`;
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      // Base values for different tickers
+      let basePrice = 0;
+      let baseVolume = 0;
+      let baseAvgVolume = 0;
+
+      // Set different base values based on ticker
+      if (ticker === "VNA.DE") {
+        basePrice = 28.64;
+        baseVolume = 2500000;
+        baseAvgVolume = 2000000;
+      } else if (ticker === "AT1.DE") {
+        basePrice = 1.85;
+        baseVolume = 1800000;
+        baseAvgVolume = 1500000;
+      } else if (ticker === "LEG.DE") {
+        basePrice = 78.32;
+        baseVolume = 900000;
+        baseAvgVolume = 750000;
+      } else {
+        // Default values for unknown tickers
+        basePrice = 50.0;
+        baseVolume = 1000000;
+        baseAvgVolume = 900000;
+      }
+
+      // Add some randomness to make it look like real-time data
+      const randomFactor = 0.98 + Math.random() * 0.04; // Between 0.98 and 1.02
+      const price = +(basePrice * randomFactor).toFixed(2);
+      const change = +((randomFactor - 1) * 100).toFixed(2);
+
+      const volumeRandomFactor = 0.9 + Math.random() * 0.2; // Between 0.9 and 1.1
+      const volume = Math.round(baseVolume * volumeRandomFactor);
+
+      // Return simulated market data
+      return {
+        ticker,
+        price,
+        change,
+        volume,
+        avgVolume: baseAvgVolume,
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+      return null;
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    return {
-      symbol,
-      price: formattedPrice,
-      change: formattedChange,
-      changePercent: `${change >= 0 ? "+" : ""}${changePercent.toFixed(2)}%`,
-      lastUpdated: new Date(),
-    };
-  });
+  // Function to get market data for multiple tickers
+  const getBatchMarketData = async (tickers: string[]) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Process each ticker in parallel
+      const promises = tickers.map((ticker) => getRealTimeData(ticker));
+      const results = await Promise.all(promises);
+
+      // Return as an object with tickers as keys
+      return results.reduce(
+        (acc, data) => {
+          if (data && data.ticker) {
+            acc[data.ticker] = data;
+          }
+          return acc;
+        },
+        {} as Record<string, MarketDataItem>,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    getRealTimeData,
+    getBatchMarketData,
+    isLoading,
+    error,
+    data,
+    lastUpdated,
+  };
 }

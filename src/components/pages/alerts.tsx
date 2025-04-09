@@ -22,17 +22,11 @@ import {
   Edit,
   Clock,
   AlertTriangle,
-  CheckCircle2,
   Filter,
-  ArrowUpRight,
-  ArrowDownRight,
-  Bell,
-  BellOff,
   Settings,
-  Brain,
 } from "lucide-react";
 import AlertsWidget from "../dashboard/AlertsWidget";
-import IntelligentAlerts from "../dashboard/IntelligentAlerts";
+
 import {
   Dialog,
   DialogContent,
@@ -167,62 +161,6 @@ const AlertsPage = () => {
     notificationMethod: "email",
   });
 
-  // Sample intelligent alert categories
-  const [intelligentAlertCategories, setIntelligentAlertCategories] = useState<
-    AlertCategory[]
-  >([
-    {
-      id: "stocks",
-      name: "Stock Market",
-      description: "Alerts for stock market movements and opportunities",
-      icon: <Brain className="h-5 w-5 text-blue-500" />,
-      enabled: true,
-      alerts: [
-        {
-          id: "stock-trend-reversal",
-          name: "Trend Reversal Detection",
-          description:
-            "Alert when AI detects a significant trend reversal in major indices",
-          enabled: true,
-          priority: "high",
-        },
-        {
-          id: "stock-sector-rotation",
-          name: "Sector Rotation",
-          description:
-            "Notification when capital flows indicate sector rotation",
-          enabled: true,
-          priority: "medium",
-        },
-      ],
-    },
-    {
-      id: "crypto",
-      name: "Cryptocurrency",
-      description:
-        "Alerts for cryptocurrency market movements and opportunities",
-      icon: <Brain className="h-5 w-5 text-purple-500" />,
-      enabled: true,
-      alerts: [
-        {
-          id: "crypto-volatility-spike",
-          name: "Volatility Spike",
-          description: "Alert when volatility exceeds historical averages",
-          enabled: true,
-          priority: "high",
-        },
-        {
-          id: "crypto-whale-movement",
-          name: "Whale Movement",
-          description:
-            "Notification when large holders move significant amounts",
-          enabled: false,
-          priority: "medium",
-        },
-      ],
-    },
-  ]);
-
   const handleCreateAlert = () => {
     const newAlertItem: Alert = {
       id: `${alerts.length + 1}`,
@@ -294,33 +232,6 @@ const AlertsPage = () => {
     }
   };
 
-  const handleToggleCategory = (categoryId: string, enabled: boolean) => {
-    setIntelligentAlertCategories(
-      intelligentAlertCategories.map((category) =>
-        category.id === categoryId ? { ...category, enabled } : category,
-      ),
-    );
-  };
-
-  const handleToggleIntelligentAlert = (
-    categoryId: string,
-    alertId: string,
-    enabled: boolean,
-  ) => {
-    setIntelligentAlertCategories(
-      intelligentAlertCategories.map((category) =>
-        category.id === categoryId
-          ? {
-              ...category,
-              alerts: category.alerts.map((alert) =>
-                alert.id === alertId ? { ...alert, enabled } : alert,
-              ),
-            }
-          : category,
-      ),
-    );
-  };
-
   return (
     <div className="min-h-screen bg-[#f0f2f5] dark:bg-gray-900">
       <TopNavigation />
@@ -368,7 +279,7 @@ const AlertsPage = () => {
                           }
                         >
                           <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Select sector" />
+                            <SelectValue>{newAlert.sector}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Stocks">Stocks</SelectItem>
@@ -404,7 +315,14 @@ const AlertsPage = () => {
                           }
                         >
                           <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Select condition" />
+                            <SelectValue>
+                              {newAlert.condition === "above" && "Price above"}
+                              {newAlert.condition === "below" && "Price below"}
+                              {newAlert.condition === "change_above" &&
+                                "Change above"}
+                              {newAlert.condition === "change_below" &&
+                                "Change below"}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="above">Price above</SelectItem>
@@ -449,7 +367,13 @@ const AlertsPage = () => {
                           }
                         >
                           <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Notification method" />
+                            <SelectValue>
+                              {newAlert.notificationMethod === "email" &&
+                                "Email"}
+                              {newAlert.notificationMethod === "push" &&
+                                "Push notification"}
+                              {newAlert.notificationMethod === "sms" && "SMS"}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="email">Email</SelectItem>
@@ -496,14 +420,6 @@ const AlertsPage = () => {
                 </Button>
               </div>
             )}
-
-            <div className="grid grid-cols-1 gap-6 mb-6">
-              <IntelligentAlerts
-                categories={intelligentAlertCategories}
-                onToggleCategory={handleToggleCategory}
-                onToggleAlert={handleToggleIntelligentAlert}
-              />
-            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <div className="lg:col-span-2">
@@ -577,9 +493,9 @@ const AlertsPage = () => {
                               <div className="flex items-center space-x-2">
                                 <Switch
                                   checked={alert.isActive}
-                                  onCheckedChange={(checked) =>
-                                    handleToggleAlert(alert.id, checked)
-                                  }
+                                  onCheckedChange={(checked) => {
+                                    handleToggleAlert(alert.id, checked);
+                                  }}
                                   className="data-[state=checked]:bg-orange-500"
                                 />
                                 <Button
@@ -611,41 +527,18 @@ const AlertsPage = () => {
                               </div>
                               <div className="flex items-center">
                                 <Clock className="h-3.5 w-3.5 mr-1" />
-                                {alert.lastTriggered ? (
-                                  <span>
-                                    Last triggered:{" "}
-                                    {new Date(
+                                {alert.lastTriggered
+                                  ? `Last triggered: ${new Date(
                                       alert.lastTriggered,
-                                    ).toLocaleString()}
-                                  </span>
-                                ) : (
-                                  <span>
-                                    Created:{" "}
-                                    {new Date(alert.createdAt).toLocaleString()}
-                                  </span>
-                                )}
+                                    ).toLocaleString()}`
+                                  : "Not triggered yet"}
                               </div>
                             </div>
                           </motion.div>
                         ))
                       ) : (
-                        <div className="h-[240px] flex flex-col items-center justify-center text-center p-4">
-                          <BellOff className="h-12 w-12 text-gray-300 mb-3" />
-                          <h3 className="text-gray-700 font-medium mb-1">
-                            No alerts found
-                          </h3>
-                          <p className="text-gray-500 text-sm">
-                            {activeTab === "all"
-                              ? "You haven't created any alerts yet. Create one to get started."
-                              : `No ${activeTab} alerts found. Try a different filter or create a new alert.`}
-                          </p>
-                          <Button
-                            className="mt-4 bg-orange-500 hover:bg-orange-600 text-white"
-                            onClick={() => setIsDialogOpen(true)}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Alert
-                          </Button>
+                        <div className="text-center py-8 text-gray-500">
+                          No alerts found. Create a new alert to get started.
                         </div>
                       )}
                     </div>
@@ -653,61 +546,8 @@ const AlertsPage = () => {
                 </Card>
               </div>
 
-              <div className="space-y-6">
-                <AlertsWidget
-                  alerts={alerts.filter((a) => a.isActive)}
-                  onToggleAlert={handleToggleAlert}
-                  onDeleteAlert={handleDeleteAlert}
-                  onCreateAlert={(alert) => {
-                    const newAlertItem: Alert = {
-                      id: `${alerts.length + 1}`,
-                      ...alert,
-                      createdAt: new Date().toISOString(),
-                      status: "pending",
-                    };
-                    setAlerts([newAlertItem, ...alerts]);
-                  }}
-                />
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base font-medium">
-                      Recent Alerts
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {alertHistory.map((alert) => (
-                        <div
-                          key={alert.id}
-                          className="flex items-start border-b border-gray-100 pb-3 last:border-0 last:pb-0"
-                        >
-                          <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center mr-3 flex-shrink-0">
-                            <Bell className="h-4 w-4 text-orange-600" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <Badge
-                                  variant="outline"
-                                  className="font-mono mb-1"
-                                >
-                                  {alert.symbol}
-                                </Badge>
-                                <p className="text-sm text-gray-700">
-                                  {alert.message}
-                                </p>
-                              </div>
-                              <span className="text-xs text-gray-500">
-                                {alert.timestamp}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="lg:col-span-1">
+                <AlertsWidget alerts={alertHistory} />
               </div>
             </div>
           </div>

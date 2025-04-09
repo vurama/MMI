@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import TopNavigation from "../dashboard/layout/TopNavigation";
 import DashboardLayout from "../dashboard/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,9 +97,10 @@ const MarketData = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1">
+    <div className="min-h-screen bg-[#f0f2f5] dark:bg-gray-900">
+      <TopNavigation />
+      <div className="flex h-[calc(100vh-64px)] mt-16">
+        <DashboardLayout activeItem="Market Data">
           <QuickAccessToolbar
             onOpenSearch={() => window.open("/dashboard", "_self")}
             onOpenChat={() => window.open("/advisor", "_self")}
@@ -546,7 +548,7 @@ const MarketData = () => {
               </Card>
             </div>
           </div>
-        </main>
+        </DashboardLayout>
       </div>
     </div>
   );

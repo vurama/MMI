@@ -20,7 +20,7 @@ import { useNewsFeed, NewsItem } from "@/hooks/useNewsFeed";
 import { motion } from "framer-motion";
 
 const NewsFeedDisplay: React.FC = () => {
-  const { newsItems, loading, error } = useNewsFeed();
+  const { newsItems = [], loading = false, error = null } = useNewsFeed() || {};
   const [activeTab, setActiveTab] = useState("all");
   const [pulseEffect, setPulseEffect] = useState(true);
 
@@ -35,15 +35,17 @@ const NewsFeedDisplay: React.FC = () => {
   // Get unique categories from news items
   const categories = [
     "All",
-    ...new Set(newsItems.map((item) => item.category)),
+    ...new Set(
+      (newsItems || []).map((item) => item?.category || "Uncategorized"),
+    ),
   ];
 
   // Filter news items by selected category
   const filteredItems =
     activeTab === "all"
-      ? newsItems
-      : newsItems.filter(
-          (item) => item.category.toLowerCase() === activeTab.toLowerCase(),
+      ? newsItems || []
+      : (newsItems || []).filter(
+          (item) => item?.category?.toLowerCase() === activeTab.toLowerCase(),
         );
 
   // Format date for display
@@ -81,7 +83,8 @@ const NewsFeedDisplay: React.FC = () => {
   };
 
   // Get sentiment icon based on content
-  const getSentimentIcon = (summary: string) => {
+  const getSentimentIcon = (summary: string | null | undefined) => {
+    if (!summary) return <BarChart2 className="h-4 w-4 text-gray-500" />;
     const lowerSummary = summary.toLowerCase();
 
     // Positive keywords
@@ -107,7 +110,13 @@ const NewsFeedDisplay: React.FC = () => {
   };
 
   // Get market impact based on content
-  const getMarketImpact = (summary: string) => {
+  const getMarketImpact = (summary: string | null | undefined) => {
+    if (!summary)
+      return (
+        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+          Low Impact
+        </Badge>
+      );
     const lowerSummary = summary.toLowerCase();
 
     // High impact keywords

@@ -52,11 +52,9 @@ const TopNavigation = ({
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [searchDialogQuery, setSearchDialogQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const {
-    overallScore: sentimentScore,
-    sectorScores,
-    historicalData: sentimentHistory,
-  } = useMarketSentiment();
+  const { getSentiment, getOverallSentiment } = useMarketSentiment();
+  const sentimentScore = getOverallSentiment();
+  const { sectorScores, historicalData: sentimentHistory } = getSentiment();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

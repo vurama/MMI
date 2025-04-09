@@ -2,6 +2,19 @@ import React from "react";
 import MarketSentimentScore from "./MarketSentimentScore";
 import { useMarketSentiment } from "@/hooks/useMarketSentiment";
 
+interface MarketSentimentScoreWithDataProps {
+  overallScore?: number;
+  sectorScores?: Array<{ sector: string; score: number; change?: number }>;
+  historicalData?: Array<{
+    date: string;
+    score: number;
+    sector?: string;
+    aiAnalysis?: string;
+  }>;
+  lastUpdated?: string;
+  isLoading?: boolean;
+}
+
 const MarketSentimentScoreWithData = () => {
   const {
     overallScore,
@@ -18,9 +31,9 @@ const MarketSentimentScoreWithData = () => {
     historicalData && historicalData.length > 0
       ? historicalData.map((item) => ({
           date: item.date,
-          score: item.sentiment_score,
-          sector: item.sector,
-          aiAnalysis: item.ai_analysis || undefined,
+          score: item.score,
+          sector: item.sector || undefined,
+          aiAnalysis: item.aiAnalysis || undefined,
         }))
       : [];
 

@@ -61,6 +61,7 @@ const PersonalAdvisor = () => {
   const [adminUpdates, setAdminUpdates] = useState<AdminUpdate[]>([
     {
       id: "update-1",
+      category: "stocks",
       title: "Q2 Market Performance Overview",
       content:
         "The second quarter showed significant growth across technology sectors, with AI-related stocks outperforming the broader market by 15%. Key indicators suggest continued momentum into Q3, though with increased volatility expected due to upcoming Fed decisions.",
@@ -103,6 +104,7 @@ const PersonalAdvisor = () => {
     },
     {
       id: "update-2",
+      category: "real-estate",
       title: "Real Estate Market Cooling Trends",
       content:
         "Our analysis indicates a significant cooling in residential real estate markets across major metropolitan areas. Housing inventory has increased 12% month-over-month, while days-on-market metrics have extended by an average of 15 days compared to the previous quarter.",
@@ -135,6 +137,7 @@ const PersonalAdvisor = () => {
     },
     {
       id: "update-3",
+      category: "crypto",
       title: "Cryptocurrency Regulatory Developments",
       content:
         "Recent regulatory announcements from the SEC and international bodies suggest a more structured framework for cryptocurrency markets is emerging. These developments are likely to increase institutional participation while potentially limiting certain DeFi applications.",

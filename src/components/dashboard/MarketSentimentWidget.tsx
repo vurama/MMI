@@ -50,7 +50,7 @@ const MarketSentimentWidget = ({
   const sentimentCategory = getSentimentCategory(sentimentScore);
 
   // Determine progress bar color
-  const getProgressColor = (score: number) => {
+  const getProgressColor = (score: number): string => {
     if (score >= 70) return "bg-green-500";
     if (score >= 50) return "bg-green-400";
     if (score >= 40) return "bg-gray-400";

@@ -287,6 +287,38 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/real-estate"
+          element={
+            <PrivateRoute>
+              <Suspense
+                fallback={<LoadingScreen text="Loading real estate data..." />}
+              >
+                {React.createElement(
+                  React.lazy(() => import("./components/pages/real-estate")),
+                )}
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/real-estate-engine"
+          element={
+            <PrivateRoute>
+              <Suspense
+                fallback={
+                  <LoadingScreen text="Loading real estate engine..." />
+                }
+              >
+                {React.createElement(
+                  React.lazy(
+                    () => import("./components/pages/real-estate-engine"),
+                  ),
+                )}
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
 
         <Route path="/success" element={<Success />} />
         {/* Add a catch-all route for Tempo storybooks */}

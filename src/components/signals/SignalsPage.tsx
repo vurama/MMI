@@ -711,7 +711,7 @@ export default function SignalsPage() {
                                 <Badge
                                   variant={
                                     signal.direction === "Long"
-                                      ? "success"
+                                      ? "default"
                                       : "destructive"
                                   }
                                   className="font-medium"

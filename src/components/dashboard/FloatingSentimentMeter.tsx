@@ -19,7 +19,7 @@ const FloatingSentimentMeter: React.FC<FloatingSentimentMeterProps> = ({
   // Calculate trend from historical data
   const trend =
     historicalData && historicalData.length > 1
-      ? overallScore - historicalData[1].sentiment_score
+      ? overallScore - historicalData[1].score
       : 0;
 
   useEffect(() => {

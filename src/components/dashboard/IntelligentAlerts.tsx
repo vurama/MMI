@@ -30,6 +30,7 @@ interface AlertCategory {
   description: string;
   icon: React.ReactNode;
   enabled: boolean;
+  category?: string;
   alerts: AlertType[];
 }
 
@@ -38,7 +39,7 @@ interface AlertType {
   name: string;
   description: string;
   enabled: boolean;
-  priority: "high" | "medium" | "low";
+  priority: "high" | "medium" | "low" | string;
 }
 
 interface IntelligentAlertsProps {

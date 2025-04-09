@@ -35,7 +35,10 @@ export default function DashboardStoryboard() {
             <MarketNewsWidget />
           </div>
           <div className="space-y-6">
-            <MarketSentimentWidget />
+            <MarketSentimentWidget
+              sentimentScore={65}
+              sector="Overall Market"
+            />
             <AlertsWidget />
             <SubscriptionWidget />
           </div>

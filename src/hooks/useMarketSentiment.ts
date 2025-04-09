@@ -1,183 +1,148 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../../supabase/supabase";
-import { Tables } from "@/types/supabase";
+import { useState } from "react";
 
-export type MarketSentimentItem = Tables<"market_sentiment">;
-
-export interface SectorSentiment {
+// Define types for sector scores
+export interface SectorScore {
   sector: string;
+  score: number;
+  change: number;
+}
+
+// Define types for historical data
+export interface HistoricalDataPoint {
+  date: string;
   score: number;
 }
 
+// This hook provides functions to fetch market sentiment data
 export function useMarketSentiment() {
-  const [overallScore, setOverallScore] = useState<number>(50);
-  const [sectorScores, setSectorScores] = useState<SectorSentiment[]>([]);
-  const [historicalData, setHistoricalData] = useState<MarketSentimentItem[]>(
-    [],
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [overallScore, setOverallScore] = useState<number>(
+    Math.floor(30 + Math.random() * 70),
+  ); // Random score between 30-100
+  const [sectorScores, setSectorScores] = useState<SectorScore[]>([
+    {
+      sector: "Technology",
+      score: Math.floor(30 + Math.random() * 70),
+      change: Math.floor(-5 + Math.random() * 10),
+    },
+    {
+      sector: "Finance",
+      score: Math.floor(30 + Math.random() * 70),
+      change: Math.floor(-5 + Math.random() * 10),
+    },
+    {
+      sector: "Healthcare",
+      score: Math.floor(30 + Math.random() * 70),
+      change: Math.floor(-5 + Math.random() * 10),
+    },
+    {
+      sector: "Real Estate",
+      score: Math.floor(30 + Math.random() * 70),
+      change: Math.floor(-5 + Math.random() * 10),
+    },
+    {
+      sector: "Energy",
+      score: Math.floor(30 + Math.random() * 70),
+      change: Math.floor(-5 + Math.random() * 10),
+    },
+  ]);
+  const [historicalData, setHistoricalData] = useState<HistoricalDataPoint[]>(
+    Array.from({ length: 14 }, (_, i) => ({
+      date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      score: Math.floor(30 + Math.random() * 70),
+    })),
   );
-  const [lastUpdated, setLastUpdated] = useState<string>("Loading...");
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>(
+    new Date().toISOString(),
+  );
 
-  useEffect(() => {
-    const fetchSentimentData = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // Get the latest overall sentiment score
-        const { data: latestData, error: latestError } = await supabase
-          .from("market_sentiment")
-          .select("*")
-          .eq("sector", "Overall")
-          .order("date", { ascending: false })
-          .limit(1);
-
-        if (latestError) throw latestError;
-
-        if (latestData && latestData.length > 0) {
-          setOverallScore(latestData[0].sentiment_score);
-          setLastUpdated(new Date(latestData[0].date).toLocaleString());
-        }
-
-        // Get sector-specific sentiment scores
-        const { data: sectorData, error: sectorError } = await supabase
-          .from("market_sentiment")
-          .select("*")
-          .not("sector", "eq", "Overall")
-          .order("date", { ascending: false })
-          .limit(10);
-
-        if (sectorError) throw sectorError;
-
-        if (sectorData) {
-          // Group by sector and get the latest score for each
-          const sectorMap = new Map<string, number>();
-          sectorData.forEach((item) => {
-            if (!sectorMap.has(item.sector)) {
-              sectorMap.set(item.sector, item.sentiment_score);
-            }
-          });
-
-          const sectorScoresArray = Array.from(sectorMap.entries()).map(
-            ([sector, score]) => ({ sector, score }),
-          );
-          setSectorScores(sectorScoresArray);
-        }
-
-        // Get historical data for trend visualization
-        const { data: historyData, error: historyError } = await supabase
-          .from("market_sentiment")
-          .select("*")
-          .eq("sector", "Overall")
-          .order("date", { ascending: false })
-          .limit(7);
-
-        if (historyError) throw historyError;
-
-        if (historyData) {
-          setHistoricalData(historyData.reverse()); // Reverse to get chronological order
-        }
-      } catch (err) {
-        console.error("Error fetching market sentiment data:", err);
-        setError("Failed to fetch market sentiment data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSentimentData();
-
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel("market_sentiment_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "market_sentiment" },
-        (payload) => {
-          // When we receive an update, refresh the data
-          fetchSentimentData();
-        },
-      )
-      .subscribe();
-
-    // Clean up subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const refreshSentimentData = async () => {
+  // Function to get sentiment data for a specific ticker
+  const getSentiment = async (ticker: string) => {
     setIsLoading(true);
+    setError(null);
+
     try {
-      // Get the latest overall sentiment score
-      const { data: latestData, error: latestError } = await supabase
-        .from("market_sentiment")
-        .select("*")
-        .eq("sector", "Overall")
-        .order("date", { ascending: false })
-        .limit(1);
+      // In a real implementation, this would fetch from an API
+      // For now, we'll simulate a response with random data
 
-      if (latestError) throw latestError;
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (latestData && latestData.length > 0) {
-        setOverallScore(latestData[0].sentiment_score);
-        setLastUpdated(new Date(latestData[0].date).toLocaleString());
-      }
+      // Generate a random sentiment score between 0.2 and 0.9
+      const randomSentiment = 0.2 + Math.random() * 0.7;
 
-      // Get sector-specific sentiment scores
-      const { data: sectorData, error: sectorError } = await supabase
-        .from("market_sentiment")
-        .select("*")
-        .not("sector", "eq", "Overall")
-        .order("date", { ascending: false })
-        .limit(10);
-
-      if (sectorError) throw sectorError;
-
-      if (sectorData) {
-        // Group by sector and get the latest score for each
-        const sectorMap = new Map<string, number>();
-        sectorData.forEach((item) => {
-          if (!sectorMap.has(item.sector)) {
-            sectorMap.set(item.sector, item.sentiment_score);
-          }
-        });
-
-        const sectorScoresArray = Array.from(sectorMap.entries()).map(
-          ([sector, score]) => ({ sector, score }),
-        );
-        setSectorScores(sectorScoresArray);
-      }
-
-      // Get historical data for trend visualization
-      const { data: historyData, error: historyError } = await supabase
-        .from("market_sentiment")
-        .select("*")
-        .eq("sector", "Overall")
-        .order("date", { ascending: false })
-        .limit(7);
-
-      if (historyError) throw historyError;
-
-      if (historyData) {
-        setHistoricalData(historyData.reverse()); // Reverse to get chronological order
-      }
+      // Return simulated sentiment data
+      return {
+        ticker,
+        score: randomSentiment,
+        lastUpdated: new Date().toISOString(),
+        source: "AI Analysis",
+      };
     } catch (err) {
-      console.error("Error refreshing market sentiment data:", err);
-      setError("Failed to refresh market sentiment data");
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Function to get overall market sentiment
+  const getOverallSentiment = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 700));
+
+      // Generate a random overall sentiment score between 0.3 and 0.8
+      const randomSentiment = 0.3 + Math.random() * 0.5;
+
+      return {
+        score: randomSentiment,
+        trend: randomSentiment > 0.5 ? "positive" : "negative",
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to refresh sentiment data
+  const refreshSentimentData = () => {
+    setOverallScore(Math.floor(30 + Math.random() * 70));
+    setSectorScores(
+      sectorScores.map((sector) => ({
+        ...sector,
+        score: Math.floor(30 + Math.random() * 70),
+        change: Math.floor(-5 + Math.random() * 10),
+      })),
+    );
+    setHistoricalData([
+      ...historicalData.slice(1),
+      {
+        date: new Date().toISOString().split("T")[0],
+        score: Math.floor(30 + Math.random() * 70),
+      },
+    ]);
+    setLastUpdated(new Date().toISOString());
+  };
+
   return {
+    getSentiment,
+    getOverallSentiment,
+    isLoading,
+    error,
     overallScore,
     sectorScores,
     historicalData,
     lastUpdated,
-    isLoading,
-    error,
     refreshSentimentData,
   };
 }

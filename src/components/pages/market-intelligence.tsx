@@ -30,7 +30,12 @@ const MarketIntelligencePage: React.FC = () => {
                 <h1 className="text-2xl font-bold">
                   Market Intelligence Center
                 </h1>
-                <MarketSentimentScore score={67} change={2.5} />
+                <MarketSentimentScore
+                  overallScore={67}
+                  sectorScores={[]}
+                  historicalData={[]}
+                  lastUpdated=""
+                />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -86,7 +91,10 @@ const MarketIntelligencePage: React.FC = () => {
                     </TabsContent>
 
                     <TabsContent value="sentiment" className="mt-0 space-y-6">
-                      <MarketSentimentWidget />
+                      <MarketSentimentWidget
+                        sentimentScore={65}
+                        sector="Overall Market"
+                      />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <AIInsightBox
                           title="Social Media Sentiment"
